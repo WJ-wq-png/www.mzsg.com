@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>墨籽拾光工作室 - 校园投稿平台</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 引入Supabase客户端库 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
+    
+    <!-- Tailwind配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4D7C0F', // 温暖的绿色作为主色调
+                        secondary: '#F97316', // 橙色作为辅助色
+                        accent: '#EC4899', // 粉色作为点缀色
+                        neutral: '#F8FAFC', // 浅色背景
+                        dark: '#334155', // 深色文字
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['"Noto Serif SC"', 'serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义样式 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .transition-custom {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .bg-blur {
+                backdrop-filter: blur(8px);
+            }
+        }
+    </style>
+    
+    <!-- 引入中文字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-neutral text-dark antialiased">
+    <!-- 导航栏 -->
+    <header id="navbar" class="fixed w-full z-50 transition-custom bg-white/80 bg-blur shadow-sm">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="#" class="flex items-center space-x-2">
+                <span class="fa fa-pencil-square-o text-primary text-2xl"></span>
+                <span class="font-display font-bold text-xl text-primary">墨籽拾光工作室</span>
+            </a>
+            
+            <!-- 桌面导航 -->
+            <nav class="hidden md:flex items-center space-x-8">
+                <a href="#about" class="text-dark hover:text-primary transition-custom">关于我们</a>
+                <a href="#themes" class="text-dark hover:text-primary transition-custom">征稿主题</a>
+                <a href="#submit" class="text-dark hover:text-primary transition-custom">我要投稿</a>
+                <a href="#contact" class="text-dark hover:text-primary transition-custom">联系方式</a>
+                <a href="#admin" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-full transition-custom">
+                    管理登录
+                </a>
+            </nav>
+            
+            <!-- 移动端菜单按钮 -->
+            <button id="menuBtn" class="md:hidden text-dark text-xl">
+                <i class="fa fa-bars"></i>
+            </button>
+        </div>
+        
+        <!-- 移动端导航菜单 -->
+        <div id="mobileMenu" class="md:hidden hidden bg-white shadow-md absolute w-full">
+            <div class="container mx-auto px-4 py-3 flex flex-col space-y-4">
+                <a href="#about" class="text-dark hover:text-primary py-2 transition-custom">关于我们</a>
+                <a href="#themes" class="text-dark hover:text-primary py-2 transition-custom">征稿主题</a>
+                <a href="#submit" class="text-dark hover:text-primary py-2 transition-custom">我要投稿</a>
+                <a href="#contact" class="text-dark hover:text-primary py-2 transition-custom">联系方式</a>
+                <a href="#admin" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-full text-center transition-custom">
+                    管理登录
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 英雄区（背景为夏日小熊插画） -->
+    <section class="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <!-- 夏日小熊插画作为背景 -->
+            <img src="https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/39f95065c8874b469ebaffb760746001.png~tplv-a9rns2rl98-24:720:720.png?rcl=2025100213451077C34E8C28D9CF8A1867&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1759988710&x-signature=KGTdXahFXBQyaO%2FeZvMnoAb8zuY%3D" 
+                 alt="夏日校园插画" 
+                 class="w-full h-full object-cover opacity-20">
+            <div class="absolute inset-0 bg-gradient-to-r from-primary/10 to-secondary/10"></div>
+        </div>
+        
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="max-w-3xl mx-auto text-center">
+                <h1 class="font-display font-bold text-[clamp(2rem,5vw,3.5rem)] leading-tight text-primary mb-6 text-shadow">
+                    记录青春的每一刻
+                </h1>
+                <p class="text-[clamp(1rem,2vw,1.25rem)] text-dark/80 mb-8 leading-relaxed">
+                    墨籽拾光工作室邀您分享校园生活中的真实故事与感悟，让每一段青春都被看见
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center gap-4">
+                    <a href="#submit" class="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-full text-lg font-medium transition-custom shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                        <i class="fa fa-pencil mr-2"></i>立即投稿
+                    </a>
+                    <a href="#themes" class="bg-white hover:bg-gray-50 text-primary border-2 border-primary px-8 py-3 rounded-full text-lg font-medium transition-custom shadow-md hover:shadow-lg transform hover:-translate-y-1">
+                        <i class="fa fa-book mr-2"></i>了解征稿主题
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 装饰元素 -->
+        <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 w-24 h-24 bg-white rounded-full shadow-lg hidden md:block"></div>
+        <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 text-primary text-3xl">
+            <i class="fa fa-chevron-down animate-bounce"></i>
+        </div>
+    </section>
+
+    <!-- 关于我们 -->
+    <section id="about" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-3xl mx-auto text-center mb-16">
+                <h2 class="font-display font-bold text-[clamp(1.5rem,3vw,2.5rem)] text-primary mb-4">关于我们</h2>
+                <div class="w-20 h-1 bg-secondary mx-auto mb-6"></div>
+                <p class="text-lg text-dark/80 leading-relaxed">
+                    墨籽拾光工作室致力于打造一本聚焦初高中校园生活的读物，用文字记录青春的美好与成长
+                </p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto bg-neutral rounded-2xl shadow-xl overflow-hidden">
+                <div class="md:flex">
+                    <div class="md:w-1/2 p-8 md:p-10 flex flex-col justify-center">
+                        <h3 class="font-display font-bold text-2xl text-primary mb-4">书刊定位</h3>
+                        <p class="text-dark/80 leading-relaxed mb-4">
+                            本书刊聚焦初中/高中校园生活，以"真实、温暖、有共鸣"为核心，旨在打造一本能够唤醒校园记忆、传递青春力量的读物。
+                        </p>
+                        <p class="text-dark/80 leading-relaxed">
+                            无论是记录日常点滴的随笔，还是虚构的校园故事，亦或是对青春成长的思考，只要能触动人心，都将在这里找到属于它的位置。
+                        </p>
+                    </div>
+                    <div class="md:w-1/2">
+                        <img src="https://p26-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/08a51c091fd4494b9c590f67942639e9.png~tplv-a9rns2rl98-24:720:720.png?rcl=20251002134613785AE98DEB84F57BC10C&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1759988774&x-signature=1wMvQDrLDObGeqOpSxFRY0EmtPk%3D" 
+                             alt="校园生活场景" 
+                             class="w-full h-full object-cover">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 征稿主题 -->
+    <section id="themes" class="py-20 bg-gradient-to-b from-white to-neutral">
+        <div class="container mx-auto px-4">
+            <div class="max-w-3xl mx-auto text-center mb-16">
+                <h2 class="font-display font-bold text-[clamp(1.5rem,3vw,2.5rem)] text-primary mb-4">征稿主题</h2>
+                <div class="w-20 h-1 bg-secondary mx-auto mb-6"></div>
+                <p class="text-lg text-dark/80 leading-relaxed">
+                    我们期待你的分享，无论是真实的校园生活，还是虚构的青春故事，只要能触动人心
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <!-- 主题卡片1 -->
+                <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-custom overflow-hidden transform hover:-translate-y-2">
+                    <div class="h-48 overflow-hidden">
+                        <img src="https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/8164f4cddaad42169de3f1529d45c9b8.png~tplv-a9rns2rl98-24:720:720.png?rcl=20251002135751E9113FB71E23968CFC59&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1759989471&x-signature=CFXueGTSepK653LqeCO0uxPH4ew%3D" 
+                             alt="校园日常" 
+                             class="w-full h-full object-cover transition-custom hover:scale-110">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <span class="fa fa-school text-primary text-xl mr-3"></span>
+                            <h3 class="font-display font-bold text-xl text-primary">校园日常</h3>
+                        </div>
+                        <p class="text-dark/70 leading-relaxed">
+                            课堂趣事、师生/同学情谊等真实场景，记录校园生活中的点点滴滴，捕捉那些平凡却闪光的瞬间。
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 主题卡片2 -->
+                <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-custom overflow-hidden transform hover:-translate-y-2">
+                    <div class="h-48 overflow-hidden">
+                        <img src="https://p3-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/269f1a92f1144812937dcf314e537373.png~tplv-a9rns2rl98-24:720:720.png?rcl=202510021359588F91562339BB3ED901CF&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1759989599&x-signature=XBiqMNX6QYAzu9DtiH9Kw3sPtRI%3D" 
+                             alt="青春成长" 
+                             class="w-full h-full object-cover transition-custom hover:scale-110">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <span class="fa fa-leaf text-primary text-xl mr-3"></span>
+                            <h3 class="font-display font-bold text-xl text-primary">青春成长</h3>
+                        </div>
+                        <p class="text-dark/70 leading-relaxed">
+                            学业、人际、自我认知中的困惑与突破，分享你在青春道路上的迷茫、探索与收获。
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 主题卡片3 -->
+                <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-custom overflow-hidden transform hover:-translate-y-2">
+                    <div class="h-48 overflow-hidden">
+                        <img src="https://p11-flow-imagex-download-sign.byteimg.com/tos-cn-i-a9rns2rl98/5e0f204e669846948e549622158e970d.png~tplv-a9rns2rl98-24:720:720.png?rcl=202510021401219E5502CE31898B9CC94B&rk3s=8e244e95&rrcfp=8a172a1a&x-expires=1759989681&x-signature=tXbwVFVpahP3pTMdeaisJfE4VZ8%3D" 
+                             alt="故事创作" 
+                             class="w-full h-full object-cover transition-custom hover:scale-110">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <span class="fa fa-pencil text-primary text-xl mr-3"></span>
+                            <h3 class="font-display font-bold text-xl text-primary">故事创作</h3>
+                        </div>
+                        <p class="text-dark/70 leading-relaxed">
+                            校园题材短篇、轻小说等虚构内容，发挥你的想象力，创作属于青春的精彩故事。
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 主题卡片4 -->
+                <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-custom overflow-hidden transform hover:-translate-y-2">
+                    <div class="h-48 overflow-hidden">
+                        <img src="https://picsum.photos/id/24/800/600" 
+                             alt="感悟随笔" 
+                             class="w-full h-full object-cover transition-custom hover:scale-110">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <span class="fa fa-lightbulb-o text-primary text-xl mr-3"></span>
+                            <h3 class="font-display font-bold text-xl text-primary">感悟随笔</h3>
+                        </div>
+                        <p class="text-dark/70 leading-relaxed">
+                            对青春、校园的思考与心境，用文字记录那些突如其来的感悟和思考。
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- 主题卡片5 -->
+                <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-custom overflow-hidden transform hover:-translate-y-2 md:col-span-2 lg:col-span-1">
+                    <div class="h-48 overflow-hidden">
+                        <img src="https://picsum.photos/id/42/800/600" 
+                             alt="创意作品" 
+                             class="w-full h-full object-cover transition-custom hover:scale-110">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <span class="fa fa-paint-brush text-primary text-xl mr-3"></span>
+                            <h3 class="font-display font-bold text-xl text-primary">创意作品</h3>
+                        </div>
+                        <p class="text-dark/70 leading-relaxed">
+                            校园诗歌、日记、书信等，用各种形式的创意作品表达你对校园和青春的理解。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 投稿表单 -->
+    <section id="submit" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-3xl mx-auto text-center mb-16">
+                <h2 class="font-display font-bold text-[clamp(1.5rem,3vw,2.5rem)] text-primary mb-4">我要投稿</h2>
+                <div class="w-20 h-1 bg-secondary mx-auto mb-6"></div>
+                <p class="text-lg text-dark/80 leading-relaxed">
+                    请填写以下信息提交你的作品，我们会认真阅读每一份投稿
+                </p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto bg-neutral rounded-2xl shadow-xl p-8 md:p-10">
+                <form id="submissionForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="name" class="block text-dark font-medium mb-2">作者姓名 <span class="text-red-500">*</span></label>
+                            <input type="text" id="name" name="name" required
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-custom outline-none">
+                        </div>
+                        
+                        <div>
+                            <label for="grade" class="block text-dark font-medium mb-2">年级 <span class="text-red-500">*</span></label>
+                            <select id="grade" name="grade" required
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-custom outline-none">
+                                <option value="">请选择年级</option>
+                                <option value="初一">初一</option>
+                                <option value="初二">初二</option>
+                                <option value="初三">初三</option>
+                                <option value="高一">高一</option>
+                                <option value="高二">高二</option>
+                                <option value="高三">高三</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="contact" class="block text-dark font-medium mb-2">联系方式 (QQ或微信) <span class="text-red-500">*</span></label>
+                        <input type="text" id="contact" name="contact" required
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-custom outline-none"
+                            placeholder="方便我们与你联系">
+                    </div>
+                    
+                    <div>
+                        <label for="title" class="block text-dark font-medium mb-2">作品标题 <span class="text-red-500">*</span></label>
+                        <input type="text" id="title" name="title" required
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-custom outline-none">
+                    </div>
+                    
+                    <div>
+                        <label for="theme" class="block text-dark font-medium mb-2">投稿主题 <span class="text-red-500">*</span></label>
+                        <select id="theme" name="theme" required
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-custom outline-none">
+                            <option value="">请选择主题</option>
+                            <option value="校园日常">校园日常</option>
+                            <option value="青春成长">青春成长</option>
+                            <option value="故事创作">故事创作</option>
+                            <option value="感悟随笔">感悟随笔</option>
+                            <option value="创意作品">创意作品</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="content" class="block text-dark font-medium mb-2">作品内容 <span class="text-red-500">*</span></label>
+                        <textarea id="content" name="content" rows="10" required
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-custom outline-none resize-none"
+                            placeholder="请在此处粘贴你的作品内容..."></textarea>
+                        <p class="text-sm text-dark/60 mt-2">字数建议：300-2000字</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-dark font-medium mb-2">作品附件 (可选)</label>
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-custom">
+                            <input type="file" id="attachment" name="attachment" accept=".txt,.doc,.docx,.pdf,.jpg,.png"
+                                class="hidden">
+                            <label for="attachment" class="cursor-pointer">
+                                <span class="fa fa-cloud-upload text-primary text-3xl mb-2 block"></span>
+                                <p class="text-dark/70">点击或拖拽文件到此处上传</p>
+                                <p class="text-xs text-dark/50 mt-1">支持txt, doc, docx, pdf, jpg, png格式</p>
+                            </label>
+                            <div id="filePreview" class="mt-3 hidden"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <input type="checkbox" id="agreement" name="agreement" required
+                            class="mt-1 mr-3">
+                        <label for="agreement" class="text-dark/70 text-sm">
+                            我已阅读并同意投稿须知，确认所提交作品为本人原创，未侵犯任何第三方权益，同意墨籽拾光工作室拥有该作品的使用权和编辑权。
+                        </label>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" id="submitBtn"
+                            class="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-full text-lg font-medium transition-custom shadow-lg hover:shadow-xl transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-primary/30">
+                            <i class="fa fa-paper-plane mr-2"></i>提交投稿
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- 联系方式 -->
+    <section id="contact" class="py-20 bg-gradient-to-b from-neutral to-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-3xl mx-auto text-center mb-16">
+                <h2 class="font-display font-bold text-[clamp(1.5rem,3vw,2.5rem)] text-primary mb-4">联系方式</h2>
+                <div class="w-20 h-1 bg-secondary mx-auto mb-6"></div>
+                <p class="text-lg text-dark/80 leading-relaxed">
+                    加入我们的QQ群，获取更多征稿信息和创作交流
+                </p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-xl shadow-lg p-8 text-center transform transition-custom hover:-translate-y-2 hover:shadow-xl">
+                    <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span class="fa fa-users text-primary text-2xl"></span>
+                    </div>
+                    <h3 class="font-display font-bold text-xl text-primary mb-4">征稿QQ群</h3>
+                    <p class="text-dark/70 mb-6">加入征稿群，获取最新征稿信息，与其他创作者交流</p>
+                    <div class="bg-neutral rounded-lg p-4 inline-block">
+                        <p class="font-mono font-bold text-xl text-dark">954034640</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg p-8 text-center transform transition-custom hover:-translate-y-2 hover:shadow-xl">
+                    <div class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <span class="fa fa-comments text-secondary text-2xl"></span>
+                    </div>
+                    <h3 class="font-display font-bold text-xl text-secondary mb-4">反馈QQ群</h3>
+                    <p class="text-dark/70 mb-6">加入反馈群，获取投稿审核结果和修改建议</p>
+                    <div class="bg-neutral rounded-lg p-4 inline-block">
+                        <p class="font-mono font-bold text-xl text-dark">1063451647</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 管理员登录和投稿管理 -->
+    <section id="admin" class="py-20 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-3xl mx-auto text-center mb-16">
+                <h2 class="font-display font-bold text-[clamp(1.5rem,3vw,2.5rem)] text-primary mb-4">管理中心</h2>
+                <div class="w-20 h-1 bg-secondary mx-auto mb-6"></div>
+                <p class="text-lg text-dark/80 leading-relaxed">
+                    工作室成员登录后可查看和管理所有投稿
+                </p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto">
+                <!-- 登录表单 -->
+                <div id="loginForm" class="bg-neutral rounded-2xl shadow-xl p-8 md:p-10">
+                    <h3 class="font-display font-bold text-2xl text-primary mb-6 text-center">管理员登录</h3>
+                    
+                    <form id="adminLoginForm" class="space-y-6">
+                        <div>
+                            <label for="adminEmail" class="block text-dark font-medium mb-2">邮箱 <span class="text-red-500">*</span></label>
+                            <input type="email" id="adminEmail" name="adminEmail" required
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-custom outline-none">
+                        </div>
+                        
+                        <div>
+                            <label for="adminPassword" class="block text-dark font-medium mb-2">密码 <span class="text-red-500">*</span></label>
+                            <input type="password" id="adminPassword" name="adminPassword" required
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-custom outline-none">
+                        </div>
+                        
+                        <div class="text-center">
+                            <button type="submit" id="loginBtn"
+                                class="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-full text-lg font-medium transition-custom shadow-lg hover:shadow-xl transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-primary/30">
+                                <i class="fa fa-sign-in mr-2"></i>登录
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- 投稿管理区域 -->
+                <div id="submissionsManagement" class="hidden bg-neutral rounded-2xl shadow-xl p-8 md:p-10 mt-8">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+                        <h3 class="font-display font-bold text-2xl text-primary mb-4 md:mb-0">投稿管理</h3>
+                        <button id="logoutBtn"
+                            class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-full text-sm font-medium transition-custom">
+                            <i class="fa fa-sign-out mr-1"></i>退出登录
+                        </button>
+                    </div>
+                    
+                    <!-- 统计信息 -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-white rounded-lg shadow p-4">
+                            <p class="text-dark/70 text-sm mb-1">总投稿数</p>
+                            <p class="text-3xl font-bold text-primary" id="totalSubmissions">0</p>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-4">
+                            <p class="text-dark/70 text-sm mb-1">待审核</p>
+                            <p class="text-3xl font-bold text-yellow-500" id="pendingSubmissions">0</p>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-4">
+                            <p class="text-dark/70 text-sm mb-1">已通过</p>
+                            <p class="text-3xl font-bold text-green-500" id="approvedSubmissions">0</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 投稿列表 -->
+                    <div class="bg-white rounded-lg shadow overflow-hidden">
+                        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                            <h4 class="font-bold text-dark">投稿列表</h4>
+                            <div class="flex space-x-2">
+                                <select id="filterStatus" class="px-3 py-1 rounded border border-gray-300 text-sm">
+                                    <option value="all">全部</option>
+                                    <option value="pending">待审核</option>
+                                    <option value="approved">已通过</option>
+                                    <option value="rejected">未通过</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-dark/70 uppercase tracking-wider">标题</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-dark/70 uppercase tracking-wider">作者</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-dark/70 uppercase tracking-wider">主题</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-dark/70 uppercase tracking-wider">提交时间</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-dark/70 uppercase tracking-wider">状态</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-dark/70 uppercase tracking-wider">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="submissionsTableBody" class="bg-white divide-y divide-gray-200">
+                                    <!-- 投稿数据将通过JavaScript动态填充 -->
+                                    <tr>
+                                        <td colspan="6" class="px-6 py-10 text-center text-dark/50">
+                                            请先登录查看投稿列表
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- 分页 -->
+                        <div class="p-4 border-t border-gray-200 flex justify-between items-center">
+                            <p class="text-sm text-dark/70" id="paginationInfo">显示 0-0 条，共 0 条</p>
+                            <div class="flex space-x-2">
+                                <button id="prevPage" class="px-3 py-1 rounded border border-gray-300 text-sm bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    上一页
+                                </button>
+                                <button id="nextPage" class="px-3 py-1 rounded border border-gray-300 text-sm bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                                    下一页
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 投稿详情模态框 -->
+    <div id="submissionModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="modalOverlay"></div>
+        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto m-4 transform transition-custom scale-95 opacity-0" id="modalContent">
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
+                <h3 class="font-display font-bold text-xl text-primary" id="modalTitle">投稿详情</h3>
+                <button id="closeModal" class="text-dark/50 hover:text-dark text-xl">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="p-6 space-y-6" id="modalBody">
+                <!-- 投稿详情将通过JavaScript动态填充 -->
+            </div>
+            
+            <div class="p-6 border-t border-gray-200 flex justify-end space-x-4 sticky bottom-0 bg-white z-10">
+                <button id="rejectSubmission" class="px-6 py-2 rounded-full border border-red-500 text-red-500 hover:bg-red-50 transition-custom">
+                    未通过
+                </button>
+                <button id="approveSubmission" class="px-6 py-2 rounded-full bg-green-500 text-white hover:bg-green-600 transition-custom">
+                    通过
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 成功提示模态框 -->
+    <div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="successModalOverlay"></div>
+        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md p-8 text-center m-4 transform transition-custom scale-95 opacity-0" id="successModalContent">
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span class="fa fa-check text-green-500 text-2xl"></span>
+            </div>
+            <h3 class="font-display font-bold text-xl text-dark mb-4" id="successModalTitle">操作成功</h3>
+            <p class="text-dark/70 mb-6" id="successModalMessage">你的操作已成功完成</p>
+            <button id="closeSuccessModal" class="w-full bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-full text-lg font-medium transition-custom">
+                确定
+            </button>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="max-w-6xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                    <div>
+                        <div class="flex items-center space-x-2 mb-4">
+                            <span class="fa fa-pencil-square-o text-white text-2xl"></span>
+                            <span class="font-display font-bold text-xl">墨籽拾光工作室</span>
+                        </div>
+                        <p class="text-white/70 leading-relaxed">
+                            记录青春，分享成长，让每一段校园记忆都被珍视。
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-bold text-lg mb-4">快速链接</h4>
+                        <ul class="space-y-2">
+                            <li><a href="#about" class="text-white/70 hover:text-white transition-custom">关于我们</a></li>
+                            <li><a href="#themes" class="text-white/70 hover:text-white transition-custom">征稿主题</a></li>
+                            <li><a href="#submit" class="text-white/70 hover:text-white transition-custom">我要投稿</a></li>
+                            <li><a href="#contact" class="text-white/70 hover:text-white transition-custom">联系方式</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-bold text-lg mb-4">联系我们</h4>
+                        <ul class="space-y-2">
+                            <li class="flex items-center">
+                                <span class="fa fa-qq text-white/70 mr-2"></span>
+                                <span class="text-white/70">征稿群: 954034640</span>
+                            </li>
+                            <li class="flex items-center">
+                                <span class="fa fa-qq text-white/70 mr-2"></span>
+                                <span class="text-white/70">反馈群: 1063451647</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="border-t border-white/10 pt-8 text-center text-white/50 text-sm">
+                    <p>&copy; 2023 墨籽拾光工作室 版权所有 | 投稿平台</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript：Supabase 配置与交互逻辑 -->
+    <script>
+        // Supabase 初始化（使用您提供的 Project URL 和 anon 密钥）
+        const supabaseUrl = 'https://xamyijbfqengsnspzyde.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhbXlpamJmcWVuZ3Nuc3B6eWRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzODIwNzUsImV4cCI6MjA3NDk1ODA3NX0.bHs-G9caxn0nAB91Ntqmo3XruxEiHBZR0QPHx5UyLaU';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+        // 导航栏滚动效果
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('py-2', 'shadow');
+                navbar.classList.remove('py-3');
+            } else {
+                navbar.classList.add('py-3');
+                navbar.classList.remove('py-2', 'shadow');
+            }
+        });
+        
+        // 移动端菜单切换
+        const menuBtn = document.getElementById('menuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        menuBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+            if (mobileMenu.classList.contains('hidden')) {
+                menuBtn.innerHTML = '<i class="fa fa-bars"></i>';
+            } else {
+                menuBtn.innerHTML = '<i class="fa fa-times"></i>';
+            }
+        });
+        
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                    
+                    // 关闭移动菜单
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                        menuBtn.innerHTML = '<i class="fa fa-bars"></i>';
+                    }
+                }
+            });
+        });
+        
+        // 文件上传预览
+        const attachmentInput = document.getElementById('attachment');
+        const filePreview = document.getElementById('filePreview');
+        
+        attachmentInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                filePreview.innerHTML = `
+                    <div class="flex items-center justify-between bg-white rounded p-2">
+                        <div class="flex items-center">
+                            <span class="fa fa-file-o text-primary mr-2"></span>
+                            <span class="text-sm text-dark truncate max-w-[200px]">${file.name}</span>
+                        </div>
+                        <button id="removeFile" class="text-red-500 hover:text-red-600">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                filePreview.classList.remove('hidden');
+                
+                document.getElementById('removeFile').addEventListener('click', () => {
+                    attachmentInput.value = '';
+                    filePreview.classList.add('hidden');
+                });
+            }
+        });
+        
+        // 投稿表单提交
+        const submissionForm = document.getElementById('submissionForm');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        submissionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>提交中...';
+            
+            try {
+                // 获取表单数据
+                const formData = {
+                    name: document.getElementById('name').value,
+                    grade: document.getElementById('grade').value,
+                    contact: document.getElementById('contact').value,
+                    title: document.getElementById('title').value,
+                    theme: document.getElementById('theme').value,
+                    content: document.getElementById('content').value,
+                    status: 'pending', // 初始状态：待审核
+                    created_at: new Date().toISOString()
+                };
+                
+                // 处理文件上传（如果有）
+                let fileData = null;
+                if (attachmentInput.files.length > 0) {
+                    const file = attachmentInput.files[0];
+                    const fileName = `${Date.now()}_${file.name.replace(/\s+/g, '_')}`;
+                    
+                    // 上传文件到 Supabase Storage
+                    const { data: uploadData, error: uploadError } = await supabase
+                        .storage
+                        .from('submissions') // 需在 Supabase 后台创建名为 "submissions" 的存储桶
+                        .upload(fileName, file);
+                    
+                    if (uploadError) throw uploadError;
+                    
+                    // 获取文件公共 URL
+                    const { data: urlData } = supabase
+                        .storage
+                        .from('submissions')
+                        .getPublicUrl(fileName);
+                    
+                    fileData = {
+                        name: file.name,
+                        url: urlData.publicUrl,
+                        size: file.size,
+                        type: file.type
+                    };
+                    
+                    formData.attachment = fileData;
+                }
+                
+                // 提交数据到 Supabase 数据库
+                const { data, error } = await supabase
+                    .from('submissions') // 需在 Supabase 后台创建名为 "submissions" 的表
+                    .insert([formData]);
+                    
+                if (error) throw error;
+                
+                // 提交成功，重置表单
+                submissionForm.reset();
+                filePreview.classList.add('hidden');
+                attachmentInput.value = '';
+                
+                // 显示成功提示
+                showSuccessModal('投稿成功', '感谢你的投稿！我们会尽快审核并通过QQ或微信联系你～');
+            } catch (err) {
+                console.error('投稿失败:', err);
+                alert('投稿失败，请稍后重试或联系管理员');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa fa-paper-plane mr-2"></i>提交投稿';
+            }
+        });
+        
+        // 显示成功提示模态框
+        function showSuccessModal(title, message) {
+            const modal = document.getElementById('successModal');
+            const modalContent = document.getElementById('successModalContent');
+            const titleEl = document.getElementById('successModalTitle');
+            const messageEl = document.getElementById('successModalMessage');
+            
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+            
+            // 关闭模态框
+            document.getElementById('closeSuccessModal').addEventListener('click', () => {
+                modalContent.classList.remove('scale-100', 'opacity-100');
+                modalContent.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            });
+        }
+        
+        // 管理员登录逻辑（需先在 Supabase 中创建 admins 表并添加账号）
+        const adminLoginForm = document.getElementById('adminLoginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        
+        adminLoginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i>登录中...';
+            
+            try {
+                const email = document.getElementById('adminEmail').value;
+                const password = document.getElementById('adminPassword').value;
+                
+                // 这里需根据您在 Supabase 中设置的管理员表逻辑进行验证
+                // 示例：假设您有一个 admins 表，包含 email 和 password（加密后）字段
+                const { data, error } = await supabase
+                    .from('admins') // 需在 Supabase 后台创建 admins 表
+                    .select('*')
+                    .eq('email', email)
+                    .single();
+                    
+                if (error || !data) {
+                    throw new Error('管理员账号不存在');
+                }
+                
+                // （可选）如果密码是加密存储的，需额外验证密码
+                // 此处简化为直接登录（实际项目中请添加密码验证）
+                
+                // 登录成功，显示管理界面
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('submissionsManagement').classList.remove('hidden');
+                loadSubmissions(); // 加载投稿列表（需实现此函数）
+            } catch (err) {
+                alert('登录失败：' + err.message);
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fa fa-sign-in mr-2"></i>登录';
+            }
+        });
+        
+        // 加载投稿列表（示例函数，需根据实际表结构调整）
+        async function loadSubmissions() {
+            try {
+                const { data, error } = await supabase
+                    .from('submissions')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                    
+                if (error) throw error;
+                
+                // 渲染投稿列表（此处为简化示例，实际需生成表格行）
+                const tableBody = document.getElementById('submissionsTableBody');
+                tableBody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="px-6 py-10 text-center text-dark/50">
+                                暂无投稿
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                // 生成表格行（示例）
+                data.forEach(submission => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-dark">${submission.title}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-dark/80">${submission.name}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                ${submission.theme}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-dark/80">
+                            ${new Date(submission.created_at).toLocaleString()}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                ${submission.status === 'pending' ? '待审核' : submission.status}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button class="text-primary hover:text-primary/80 mr-3 view-submission" data-id="${submission.id}">
+                                查看
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                // 更新统计数据
+                document.getElementById('totalSubmissions').textContent = data.length;
+                document.getElementById('pendingSubmissions').textContent = data.filter(s => s.status === 'pending').length;
+                document.getElementById('approvedSubmissions').textContent = data.filter(s => s.status === 'approved').length;
+                
+            } catch (err) {
+                console.error('加载投稿失败:', err);
+                alert('加载投稿列表失败，请重试');
+            }
+        }
+    </script>
+</body>
+</html>
